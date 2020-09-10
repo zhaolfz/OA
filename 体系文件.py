@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import random
+
 import json
 import re
 from lxml import etree
@@ -62,15 +63,41 @@ def webget():
     # for url in infomation:
     url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnow' \
           'ledge.do?method=view&fdId=16a04be87210a0b4ae0a1ae450a9b3ea'
+    #配置浏览器不打开页面，只在后台运行
+    # chrome_options = webdriver.ChromeOptions()
+    # chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('disable-gpu')
+    # chrome_options = chrome_options
     chrome = webdriver.Chrome()
     chrome.get(url)
+    # print('header:',headers)
+    # 输入账号密码
+    name = chrome.find_element_by_name('j_username')
+    password = chrome.find_element_by_name('j_password')
+    name.send_keys('zhaolf')
+    password.send_keys('19921231Zlf')
+
+    # 登录
+    login_button = chrome.find_element_by_class_name("lui_login_button_div_c")
+    login_button.click()
+    html = chrome.page_source
+    code = etree.HTML(html)
+    imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
+    for i in imp:
+        down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
+        res = requests.get(down_url)
+        down_fire = random.randint(1,3)
+        if not os.path.exists('aa'):
+            os.mkdir('aa')
+        with open('aa/%s'%down_fire,'wb') as g:
+            g.write(res)
     cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
     ret = ''
     for cookie in cookies:
         cookie_name = cookie['name']
         cookie_value = cookie['value']
         ret = ret + cookie_name + '=' + cookie_value + ';'  # ret即为最终的cookie，各cookie以“;”相隔开
-        print('ret',ret)
+        # print('ret',ret)
     headers = {
         'Host': 'oa.bears.com',
         'Referer': 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnow' \
@@ -79,19 +106,7 @@ def webget():
         'X-Requested-With': 'XMLHttpRequest',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Cookie': ret } # 需要登陆后捕获cookie并调用
-    print('header:',headers)
-    #输入账号密码
-    name = chrome.find_element_by_name('j_username')
-    password = chrome.find_element_by_name('j_password')
-    name.send_keys('zhaolf')
-    password.send_keys('19921231Zlf')
 
-    #登录
-    login_button = chrome.find_element_by_class_name("lui_login_button_div_c")
-    login_button.click()
-
-    html = chrome.page_source
-    print(html)
 
 
 url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutio' \
