@@ -7,6 +7,7 @@ import re
 from lxml import etree
 from selenium import webdriver
 import os
+import time
 
 
 def get_infomation(url):
@@ -60,6 +61,13 @@ def get_infomation(url):
 
 
 def webget():
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
+                             'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
+
+    cookies = {
+        'Cookie': 'j_lang=zh-CN; JSESSIONID=B032696A24A40BA8787DBA13E1B30364; LtpaToken=AAECAzVGNjIyNzQzNUY2MkQwMD'
+                  'N6aGFvbGZVPpGs2yJNVUlb8viHce701n7slw=='}
     # for url in infomation:
     url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnow' \
           'ledge.do?method=view&fdId=16a04be87210a0b4ae0a1ae450a9b3ea'
@@ -82,14 +90,25 @@ def webget():
     login_button.click()
     html = chrome.page_source
     code = etree.HTML(html)
+    dict_id ={}
     imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
-    for i in imp:
+
+    down_fire = code.xpath(
+        "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
+
+    dict_id[imp] = down_fire
+
+    print(dict_id)
+    #尝试将imp和down_fire提取到字典中
+
+    for i in imp:#找到下载ID参数
         down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
-        res = requests.get(down_url)
-        down_fire = random.randint(1,3)
-        if not os.path.exists('aa'):
-            os.mkdir('aa')
-        with open('aa/%s'%down_fire,'wb') as g:
+        res = requests.get(down_url,headers=headers,cookies=cookies).content
+
+        if not os.path.exists('03.管理标准'):
+            os.mkdir('03.管理标准')
+
+        with open('03.管理标准/%s'%down_fire,'wb') as g:
             g.write(res)
     cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
     ret = ''
@@ -109,10 +128,7 @@ def webget():
 
 
 
-url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutio' \
-      'nKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab6' \
-      '4024e8bb4521&q.docStatus=30&orderby=docC' \
-      'reateTime&o' \
-      'rdertype=down&__seq=1599054519269&s_ajax=true'
+url = 'http://oa.bears.com.cn:27292/km/institution/?categor' \
+      'yId=15dbf410dca548412ab64024e8bb4521#cri.q=docStatus:30'
 # get_infomation(url)
 webget()
