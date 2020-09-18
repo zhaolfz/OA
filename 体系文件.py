@@ -66,8 +66,9 @@ def webget():
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
 
     cookies = {
-        'Cookie': 'j_lang=zh-CN; JSESSIONID=B032696A24A40BA8787DBA13E1B30364; LtpaToken=AAECAzVGNjIyNzQzNUY2MkQwMD'
-                  'N6aGFvbGZVPpGs2yJNVUlb8viHce701n7slw=='}
+        'Cookie': 'JSESSIONID=E08777C985F951DAA750AA177B700701; LtpaToken=AAECAzVGNjRCOTNCNUY2NTYxRkJ6aGFvbGaxh5iQkT/hU'
+                  'QYkFBpRiM9wx4XJ8w==; j_lang=zh-CN'}
+    #打开文件页面
     # for url in infomation:
     url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnow' \
           'ledge.do?method=view&fdId=16a04be87210a0b4ae0a1ae450a9b3ea'
@@ -93,23 +94,30 @@ def webget():
     dict_id ={}
     imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
 
-    down_fire = code.xpath(
-        "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
 
-    dict_id[imp] = down_fire
 
-    print(dict_id)
+
+    # dict_id[imp] = down_fire
+
+    # print(dict_id)
     #尝试将imp和down_fire提取到字典中
+    num = 0
+    while num < len(imp):
+        down_fire = code.xpath(
+            "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
+        for i in imp:#找到下载ID参数
 
-    for i in imp:#找到下载ID参数
-        down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
-        res = requests.get(down_url,headers=headers,cookies=cookies).content
 
-        if not os.path.exists('03.管理标准'):
-            os.mkdir('03.管理标准')
+            down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
+            res = requests.get(down_url,headers=headers,cookies=cookies).content
 
-        with open('03.管理标准/%s'%down_fire,'wb') as g:
-            g.write(res)
+            if not os.path.exists('03.管理标准'):
+                os.mkdir('03.管理标准')
+
+            with open('03.管理标准/%s'%down_fire[num],'wb') as g:
+                g.write(res)
+                num += 1
+
     cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
     ret = ''
     for cookie in cookies:
