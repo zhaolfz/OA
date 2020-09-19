@@ -140,4 +140,3 @@ url = 'http://oa.bears.com.cn:27292/km/institution/?categor' \
       'yId=15dbf410dca548412ab64024e8bb4521#cri.q=docStatus:30'
 # get_infomation(url)
 webget()
-a = 1
