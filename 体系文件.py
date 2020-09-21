@@ -64,11 +64,7 @@ def webget():
 
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
-
-    cookies = {
-        'Cookie': 'JSESSIONID=E08777C985F951DAA750AA177B700701; LtpaToken=AAECAzVGNjRCOTNCNUY2NTYxRkJ6aGFvbGaxh5iQkT/hU'
-                  'QYkFBpRiM9wx4XJ8w==; j_lang=zh-CN'}
-    #打开文件页面
+    #打开文件页面（批量获取文件页面？？？？？）
     # for url in infomation:
     url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnow' \
           'ledge.do?method=view&fdId=16a04be87210a0b4ae0a1ae450a9b3ea'
@@ -79,29 +75,32 @@ def webget():
     # chrome_options = chrome_options
     chrome = webdriver.Chrome()
     chrome.get(url)
-    # print('header:',headers)
+
     # 输入账号密码
     name = chrome.find_element_by_name('j_username')
     password = chrome.find_element_by_name('j_password')
     name.send_keys('zhaolf')
     password.send_keys('19921231Zlf')
 
-    # 登录
+    # 执行登录
     login_button = chrome.find_element_by_class_name("lui_login_button_div_c")
     login_button.click()
     html = chrome.page_source
+    cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
+    ret = ''
+
+    #捕获拼接登录所用的cookies
+    for cookie in cookies:
+        cookie_name = cookie['name']
+        cookie_value = cookie['value']
+        ret = ret + cookie_name + '=' + cookie_value + ';'  # ret即为最终的cookie，各cookie以“;”相隔开
+    a = {}
+    #将cookies写入字典中
+    cookie = a['cookies'] = '{}'.format(ret)
     code = etree.HTML(html)
-    dict_id ={}
     imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
-
-
-
-
-    # dict_id[imp] = down_fire
-
-    # print(dict_id)
-    #尝试将imp和down_fire提取到字典中
     num = 0
+    #获取ID数量，并逐个下载，并给下载文件命名
     while num < len(imp):
         down_fire = code.xpath(
             "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
@@ -109,7 +108,7 @@ def webget():
 
 
             down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
-            res = requests.get(down_url,headers=headers,cookies=cookies).content
+            res = requests.get(down_url,headers=headers,cookies=a).content
 
             if not os.path.exists('03.管理标准'):
                 os.mkdir('03.管理标准')
@@ -118,25 +117,7 @@ def webget():
                 g.write(res)
                 num += 1
 
-    cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
-    ret = ''
-    for cookie in cookies:
-        cookie_name = cookie['name']
-        cookie_value = cookie['value']
-        ret = ret + cookie_name + '=' + cookie_value + ';'  # ret即为最终的cookie，各cookie以“;”相隔开
-        # print('ret',ret)
-    headers = {
-        'Host': 'oa.bears.com',
-        'Referer': 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnow' \
-          'ledge.do?method=view&fdId=16a04be87210a0b4ae0a1ae450a9b3ea',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
-        'X-Requested-With': 'XMLHttpRequest',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Cookie': ret } # 需要登陆后捕获cookie并调用
-
-
-
-url = 'http://oa.bears.com.cn:27292/km/institution/?categor' \
-      'yId=15dbf410dca548412ab64024e8bb4521#cri.q=docStatus:30'
+# url = 'http://oa.bears.com.cn:27292/km/institution/?categor' \
+#       'yId=15dbf410dca548412ab64024e8bb4521#cri.q=docStatus:30'
 # get_infomation(url)
 webget()
