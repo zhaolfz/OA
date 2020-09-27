@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import random
-
+from time import sleep
 import json
 import re
 from lxml import etree
@@ -16,8 +16,8 @@ def get_infomation(url):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
 
-    cookies = {'Cookie': 'j_lang=zh-CN; JSESSIONID=6CF942E6E6F659F055A3D9E1583AE7D9; LtpaToken=AAECAzVGNkNBQkRDNUY2RD'
-                         'U0OUN6aGFvbGbaCjAFzC7a/i6Nrbtah23OZgeUbg=='}
+    cookies = {'Cookie': 'JSESSIONID=33672E5042D8E121707DDDAA844FA08B; LtpaToken=AAECAzVGNkY1M0ZDNUY2RkZDQkN6aGFvbG'
+                         'a9aucJps1E3/VSqgqfuRcU+EL0Xg==; j_lang=zh-CN'}
     #翻页
     # num = range(2,13)
     num = [2,3]
@@ -70,6 +70,49 @@ def get_infomation(url):
 
         return page_urls
 
+def ret_cookies():
+    pass
+def login_intooa(url,page_url):
+    # 配置浏览器不打开页面，只在后台运行
+    # chrome_options = webdriver.ChromeOptions()
+    # chrome_options.add_argument('--headless')
+    # chrome_options.add_argument('disable-gpu')
+    # chrome_options = chrome_options
+
+    chrome = webdriver.Chrome()
+
+    chrome.get(url)
+    cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
+    ret = ''
+    # 捕获拼接登录所用的cookies
+    for cookie in cookies:
+        cookie_name = cookie['name']
+        cookie_value = cookie['value']
+        ret = ret + cookie_name + '=' + cookie_value + ';'  # ret即为最终的cookie，各cookie以“;”相隔开
+    a = {}
+    # 将cookies写入字典中
+    cookie = a['cookies'] = '{}'.format(ret)
+
+    sleep(15)
+    # 输入账号密码
+    name = chrome.find_element_by_name('j_username')
+    password = chrome.find_element_by_name('j_password')
+    name.send_keys('zhaolf')
+    password.send_keys('19921231Zlf')
+    #
+    # # 执行登录
+    login_button = chrome.find_element_by_class_name("lui_login_button_div_c")
+    login_button.click()
+
+    for url in page_url:
+        chrome.get(url)
+        sleep(7)
+        html = chrome.page_source
+
+        return html
+
+
+
 
 
 
@@ -80,7 +123,13 @@ def webget(url):
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
     #打开文件页面（批量获取文件页面？？？？？）
     # 引入page行链接
+    login_url = 'http://oa.bears.com.cn:27292'
+
+    #登录
+    # login_intooa(login_url)
+
     page_url = get_infomation(url)
+
     for url in page_url:
 
         # for url in infomation:
@@ -106,14 +155,7 @@ def webget(url):
         cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
         ret = ''
 
-        #捕获拼接登录所用的cookies
-        for cookie in cookies:
-            cookie_name = cookie['name']
-            cookie_value = cookie['value']
-            ret = ret + cookie_name + '=' + cookie_value + ';'  # ret即为最终的cookie，各cookie以“;”相隔开
-        a = {}
-        #将cookies写入字典中
-        cookie = a['cookies'] = '{}'.format(ret)
+
         code = etree.HTML(html)
         imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
         num = 0
@@ -135,10 +177,12 @@ def webget(url):
                     g.write(res)
                     num += 1
 
-url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutio' \
-      'nKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab6' \
-      '4024e8bb4521&q.docStatus=30&orderby=docC' \
-      'reateTime&o' \
-      'rdertype=down&__seq=1599054519269&s_ajax=true'
+url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_know' \
+      'ledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15d' \
+      'bf410dca548412ab64024e8bb4521&q.docStatus=30&orderby=docCreateTime&ordert' \
+      'ype=down&__seq=1601131587970&s_ajax=true'
 # get_infomation(url)
-webget(url)
+# webget(url)
+
+url_oa = 'http://oa.bears.com.cn:27292/login.jsp'
+login_intooa(url_oa)
