@@ -11,16 +11,16 @@ import time
 
 
 def get_infomation(url):
-
+    """用于获取并返回网页中各个列表的跳转链接"""
 
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
 
-    cookies = {'Cookie': 'JSESSIONID=33672E5042D8E121707DDDAA844FA08B; LtpaToken=AAECAzVGNkY1M0ZDNUY2RkZDQkN6aGFvbG'
-                         'a9aucJps1E3/VSqgqfuRcU+EL0Xg==; j_lang=zh-CN'}
+    cookies = {'Cookie': 'JSESSIONID=EA1586D22C442FE0208808119F846596; LtpaToken=AAECAzVGODA2Q0RBNUY4MTE1OUF6aGFvbGb'
+                         'vSQSYcSvAXIPexUFWQV2WFSPKBw==; j_lang=zh-CN'}
     #翻页
     # num = range(2,13)
-    num = [2,3]
+    num = [4,14]
     nums = random.uniform(0,0.05)
 
     for i in num:
@@ -70,9 +70,9 @@ def get_infomation(url):
 
         return page_urls
 
-def ret_cookies():
-    pass
-def login_intooa(url,page_url):
+
+def login_intooa(login_url,page_url):
+    """模拟浏览器登录OA，并记录返回 cookies，和各个跳转页的html"""
     # 配置浏览器不打开页面，只在后台运行
     # chrome_options = webdriver.ChromeOptions()
     # chrome_options.add_argument('--headless')
@@ -81,7 +81,7 @@ def login_intooa(url,page_url):
 
     chrome = webdriver.Chrome()
 
-    chrome.get(url)
+    chrome.get(login_url)
     cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
     ret = ''
     # 捕获拼接登录所用的cookies
@@ -93,7 +93,7 @@ def login_intooa(url,page_url):
     # 将cookies写入字典中
     cookie = a['cookies'] = '{}'.format(ret)
 
-    sleep(15)
+    sleep(10)
     # 输入账号密码
     name = chrome.find_element_by_name('j_username')
     password = chrome.find_element_by_name('j_password')
@@ -106,12 +106,17 @@ def login_intooa(url,page_url):
 
     for url in page_url:
         chrome.get(url)
-        sleep(7)
+        sleep(5)
         html = chrome.page_source
+        
+        yield (html,a)
 
-        return html
-
-
+def ret_cookies(login_url,page_url):
+    """用于获取网页的html，和cookies"""
+    a = login_intooa(login_url,page_url)
+    for html,a1 in a:
+        print(html)
+        print(a1)
 
 
 
@@ -129,33 +134,9 @@ def webget(url):
     # login_intooa(login_url)
 
     page_url = get_infomation(url)
-
-    for url in page_url:
-
-        # for url in infomation:
-
-        #配置浏览器不打开页面，只在后台运行
-        # chrome_options = webdriver.ChromeOptions()
-        # chrome_options.add_argument('--headless')
-        # chrome_options.add_argument('disable-gpu')
-        # chrome_options = chrome_options
-        chrome = webdriver.Chrome()
-        chrome.get(url)
-
-        # 输入账号密码
-        name = chrome.find_element_by_name('j_username')
-        password = chrome.find_element_by_name('j_password')
-        name.send_keys('zhaolf')
-        password.send_keys('19921231Zlf')
-        #
-        # # 执行登录
-        login_button = chrome.find_element_by_class_name("lui_login_button_div_c")
-        login_button.click()
-        html = chrome.page_source
-        cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
-        ret = ''
-
-
+    #调用login_intooa函数，进入每页页面中
+    htmls = login_intooa(login_url, page_url)
+    for html,a in htmls:
         code = etree.HTML(html)
         imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
         num = 0
@@ -177,12 +158,8 @@ def webget(url):
                     g.write(res)
                     num += 1
 
-url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_know' \
-      'ledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15d' \
-      'bf410dca548412ab64024e8bb4521&q.docStatus=30&orderby=docCreateTime&ordert' \
-      'ype=down&__seq=1601131587970&s_ajax=true'
-# get_infomation(url)
-# webget(url)
+url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab64024e8bb4521&q.docStatus=30&orderby=docCreateTime&ordertype=down&__seq=1602253384112&s_ajax=true'
 
-url_oa = 'http://oa.bears.com.cn:27292/login.jsp'
-# login_intooa(url_oa)
+# get_infomation(url)
+webget(url)
+
