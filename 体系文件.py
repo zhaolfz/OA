@@ -10,16 +10,17 @@ import os
 import time
 
 
-def get_infomation(url,a):
+def get_infomation(url):
     """用于获取并返回网页中各个列表的跳转链接"""
 
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
 
-    cookies = {'Cookie': 'JSESSIONID=8825D80493DD981466F293DDC090C950; LtpaToken=AAECAzVGODI4QjFGNUY4MzMzREZ6aGFvbGapZgGwUPeJPuBShcTkosoSj3Nxjw==; j_lang=zh-CN'}
+    cookies = {'Cookie': 'JSESSIONID=0424C9FDEB05A86898DBBA4DF45700E5; LtpaToken=AAECAzVGODVCMjk1NUY4NjVCNTV6aGFvbGZ/GD0glQVqblZ0+QuD/2hIKPVp/Q==; j_lang=zh-CN'}
     #翻页
-    # num = range(2,13)
-    num = [2,3]
+    num = range(2,42)#上次执行到02 表单模板，41页，下次可从42开始，可以创建目录
+    # num = [1]
+    # num = [3,14]
     nums = random.uniform(0,0.05)
 
     for i in num:
@@ -67,7 +68,7 @@ def get_infomation(url,a):
               'owledge.do?method=view&fdId='+information['id']
             page_urls.append(page_url)
 
-        return page_urls
+        yield page_urls
 
 
 def login_intooa(login_url,page_url):
@@ -78,20 +79,6 @@ def login_intooa(login_url,page_url):
     # chrome_options.add_argument('disable-gpu')
     # chrome_options = chrome_options
 
-    chrome = webdriver.Chrome()
-    a = ret_cookies(login_url)
-
-    
-
-    for url in page_url:
-        chrome.get(url)
-        sleep(5)
-        html = chrome.page_source
-        
-        yield (html,a)
-
-def ret_cookies(login_url):
-    """用于获取网页的cookies"""
     chrome = webdriver.Chrome()
 
     chrome.get(login_url)
@@ -108,6 +95,24 @@ def ret_cookies(login_url):
     login_button.click()
     sleep(5)
     cookies = chrome.get_cookies()  # 利用selenium原生方法得到cookies
+    a = ret_cookies(cookies) #截取cookies
+
+    zs = 0
+    for url in page_url:
+
+        chrome.get(url)
+        sleep(5)
+        html = chrome.page_source
+        print('当前一共有{}行内容'.format(len(page_url)))
+        zs += 1
+        finish = len(page_url) - zs
+        print('已完成{}行,剩余{}行'.format(zs, finish))
+        
+        yield (html,a)
+
+def ret_cookies(cookies):
+    """用于获取网页的cookies"""
+
     ret = ''
     a = {}
     # 捕获拼接登录所用的cookies
@@ -132,32 +137,38 @@ def webget(url):
     #登录
     # login_intooa(login_url)
 
-    page_url = get_infomation(url)
-    #调用login_intooa函数，进入每页页面中
-    htmls = login_intooa(login_url, page_url)
-    for html,a in htmls:
-        code = etree.HTML(html)
-        imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
-        num = 0
+    for page_url in get_infomation(url):
+        #调用login_intooa函数，进入每页页面中
+        htmls = login_intooa(login_url, page_url)
+        for html,a in htmls:
+            code = etree.HTML(html)
 
-        #获取ID数量，并逐个下载，并给下载文件命名
-        while num < len(imp):
-            down_fire = code.xpath(
-                "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
-            for i in imp:#找到下载ID参数
+            imp = code.xpath("//table[@id='att_xtable_attachment']/tbody/tr/@id")
+            num = 0
+
+            title = code.xpath("//div[@class='lui_item_txt']/text()")[2].replace("\xa0",'.')
+
+            module = code.xpath("//div[@class='lui_item_txt']/text()")[3].replace("\xa0",'.')
+
+            mulu = title+'/'+module
+            #获取ID数量，并逐个下载，并给下载文件命名
+            while num < len(imp):
+                down_fire = code.xpath(
+                    "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
+                for i in imp:#找到下载ID参数
 
 
-                down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
-                res = requests.get(down_url,headers=headers,cookies=a).content
+                    down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
+                    res = requests.get(down_url,headers=headers,cookies=a).content
 
-                if not os.path.exists('03.管理标准'):
-                    os.mkdir('03.管理标准')
+                    if not os.path.exists(mulu):
+                        os.makedirs(mulu)
+                    name = down_fire[num]
+                    with open('{}/{}'.format(mulu,name),'wb') as g:#('03.管理标准/%s'%down_fire[num],'wb')
+                        g.write(res)
+                        num += 1
 
-                with open('03.管理标准/%s'%down_fire[num],'wb') as g:
-                    g.write(res)
-                    num += 1
-
-url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab64024e8bb4521&q.docStatus=30&orderby=docCreateTime&ordertype=down&__seq=1602391330487&s_ajax=true'
+url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=161db6003b19e718956d5894b8982583&q.docStatus=30&orderby=docCreateTime&ordertype=down&__seq=1602598601288&s_ajax=true'
 # url1 = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab64024e8bb4521&q.docStatus=30&orderby=docCreateTime&ordertype=down&__seq=1602391060620&s_ajax=true'
 # url2 = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab64024e8bb4521&q.docStatus=30&q.s_raq=0.6489840490861063&pageno=2&rowsize=15&orderby=docCreateTime&ordertype=down&s_ajax=true'
 # login_url = 'http://oa.bears.com.cn:27292/login.jsp'
