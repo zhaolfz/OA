@@ -16,9 +16,9 @@ def get_infomation(url):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) '
                              'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'}
 
-    cookies = {'Cookie': 'JSESSIONID=0424C9FDEB05A86898DBBA4DF45700E5; LtpaToken=AAECAzVGODVCMjk1NUY4NjVCNTV6aGFvbGZ/GD0glQVqblZ0+QuD/2hIKPVp/Q==; j_lang=zh-CN'}
+    cookies = {'Cookie': 'JSESSIONID=F64EEE1EDA0F4746972C15B1CC47C598; LtpaToken=AAECAzVGODlBRERENUY4QTU2OUR6aGFvbGYfoxU+a0lzC8M3C+LfDak8VAYyEQ==; j_lang=zh-CN'}
     #翻页
-    num = range(2,42)#上次执行到02 表单模板，41页，下次可从42开始，可以创建目录
+    num = range(15,42)#上次执行到02 表单模板，41页，下次可从42开始，可以创建目录  QFM-13-044A 证照移交登记表
     # num = [1]
     # num = [3,14]
     nums = random.uniform(0,0.05)
@@ -107,7 +107,7 @@ def login_intooa(login_url,page_url):
         zs += 1
         finish = len(page_url) - zs
         print('已完成{}行,剩余{}行'.format(zs, finish))
-        
+
         yield (html,a)
 
 def ret_cookies(cookies):
@@ -147,28 +147,54 @@ def webget(url):
             num = 0
 
             title = code.xpath("//div[@class='lui_item_txt']/text()")[2].replace("\xa0",'.')
+            try:
+                module = code.xpath("//div[@class='lui_item_txt']/text()")[3].replace("\xa0",'.')
 
-            module = code.xpath("//div[@class='lui_item_txt']/text()")[3].replace("\xa0",'.')
+                mulu = title+'/'+module
+            except IndexError:
+                errortitle = code.xpath("//div[@class='lui_form_subject']/text()")
+                print('该{}节点异常'.format(errortitle))
+                while num < len(imp):
+                    down_fire = code.xpath(
+                        "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
+                    for i in imp:  # 找到下载ID参数
 
-            mulu = title+'/'+module
+                        down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId=' + i
+                        res = requests.get(down_url, headers=headers, cookies=a).content
+
+                        if not os.path.exists(title):
+                            os.makedirs(title)
+                        name = down_fire[num]
+                        finish_num = 0
+                        fin_pgno = 0
+                        with open('{}/{}'.format(title, name), 'wb') as g:  # ('03.管理标准/%s'%down_fire[num],'wb')
+                            g.write(res)
+                            finish_num += 1
+                            num += 1
+
+            else:
             #获取ID数量，并逐个下载，并给下载文件命名
-            while num < len(imp):
-                down_fire = code.xpath(
-                    "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
-                for i in imp:#找到下载ID参数
+                while num < len(imp):
+                    down_fire = code.xpath(
+                        "//table[@id='att_xtable_attachment']/tbody/tr/td[@class='upload_list_filename_view']/text()")
+                    for i in imp:#找到下载ID参数
 
 
-                    down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
-                    res = requests.get(down_url,headers=headers,cookies=a).content
+                        down_url = 'http://oa.bears.com.cn:27292/sys/attachment/sys_att_main/sysAttMain.do?method=download&fdId='+i
+                        res = requests.get(down_url,headers=headers,cookies=a).content
 
-                    if not os.path.exists(mulu):
-                        os.makedirs(mulu)
-                    name = down_fire[num]
-                    with open('{}/{}'.format(mulu,name),'wb') as g:#('03.管理标准/%s'%down_fire[num],'wb')
-                        g.write(res)
-                        num += 1
+                        if not os.path.exists(mulu):
+                            os.makedirs(mulu)
+                        name = down_fire[num]
+                        finish_num = 0
+                        fin_pgno = 0
+                        with open('{}/{}'.format(mulu,name),'wb') as g:#('03.管理标准/%s'%down_fire[num],'wb')
+                            g.write(res)
+                            
 
-url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=161db6003b19e718956d5894b8982583&q.docStatus=30&orderby=docCreateTime&ordertype=down&__seq=1602598601288&s_ajax=true'
+
+#15-2
+url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=161db6003b19e718956d5894b8982583&q.docStatus=30&orderby=docCreateTime&ordertype=down&__seq=1602858509417&s_ajax=true'
 # url1 = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab64024e8bb4521&q.docStatus=30&orderby=docCreateTime&ordertype=down&__seq=1602391060620&s_ajax=true'
 # url2 = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKnowledgeIndex.do?method=listChildren&categoryId=15dbf410dca548412ab64024e8bb4521&q.docStatus=30&q.s_raq=0.6489840490861063&pageno=2&rowsize=15&orderby=docCreateTime&ordertype=down&s_ajax=true'
 # login_url = 'http://oa.bears.com.cn:27292/login.jsp'
