@@ -67,8 +67,8 @@ def get_infomation(url):
             page_url = 'http://oa.bears.com.cn:27292/km/institution/km_institution_knowledge/kmInstitutionKn' \
               'owledge.do?method=view&fdId='+information['id']
             page_urls.append(page_url)
-
-        yield page_urls
+        print(page_urls)
+        return page_urls
 
 
 def login_intooa(login_url,page_url):
@@ -190,7 +190,7 @@ def webget(url):
                         fin_pgno = 0
                         with open('{}/{}'.format(mulu,name),'wb') as g:#('03.管理标准/%s'%down_fire[num],'wb')
                             g.write(res)
-                            
+
 
 
 #15-2

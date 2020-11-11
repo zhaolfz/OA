@@ -19,8 +19,9 @@ def find():
                     'month': '5'}
     response = requests.get(urls,headers=headers,params=params)
     html = response.text
+    print('html1',html)
     html = html.replace('reloadList(','').replace(')','')
-
+    print('html2',html)
     hh = json.loads(html)
 
     for i in hh['info']:
@@ -66,6 +67,6 @@ def show_data():
 
     conn.close()
 if __name__ =='__main__':
-    # find()
-    show_data()
+    find()
+    # show_data()
     # creat_db()
